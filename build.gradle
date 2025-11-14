@@ -19,6 +19,7 @@ repositories {
 }
 
 dependencies {
+    // common & for step1
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.projectlombok:lombok:1.18.30'
@@ -30,6 +31,8 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.30'
     runtimeOnly 'org.postgresql:postgresql'
 
+    // for step2
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 tasks.named('test') {
