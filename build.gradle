@@ -33,6 +33,9 @@ dependencies {
 
     // for step2
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    
+    // for step3: Redis Connection Pool ex) spring data redis에서 lettuce or jedis 커넥션 풀 관리시 사용!
+    implementation 'org.apache.commons:commons-pool2:2.12.0'
 }
 
 tasks.named('test') {

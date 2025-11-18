@@ -17,3 +17,23 @@ spring:
       platform: postgresql
       # data.sql ? springboot? ?? ??? > ?? ???? ???? ??????
       data-locations: classpath:init-data.sql
+  
+  # Redis 설정 (Step3: Cluster 지원)
+  data:
+    redis:
+      host: localhost # 단일 노드 모드일 때
+      port: 6379 # 단일 노드 모드일 때
+      # Cluster 모드 사용 시 아래 주석 해제
+      # cluster:
+      #   nodes:
+      #     - localhost:7000 # 클러스터 노드1
+      #     - localhost:7001 # 클러스터 노드2
+      #     - localhost:7002 # 클러스터 노드3
+      #   max-redirects: 3 # 클러스터 모드에서 요청 실패 시 최대 재시도 횟수
+      timeout: 2000ms # redis 서버와 통신 시 타임아웃 (2초)
+      lettuce:
+        pool:
+          max-active: 20 # 커넥션 풀 최대 활성 연결 수
+          max-idle: 10 # 커넥션 풀 최대 유휴(대기인듯) 연결 수
+          min-idle: 5 # 커넥션 풀 최소 유휴 연결 수
+          max-wait: -1ms # 커넥션 풀에서 커넥션을 얻기 위해 대기하는 최대 시간 (-1ms: 무한대기임)
