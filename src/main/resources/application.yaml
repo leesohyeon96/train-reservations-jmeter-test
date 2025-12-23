@@ -37,3 +37,32 @@ spring:
           max-idle: 10 # 커넥션 풀 최대 유휴(대기인듯) 연결 수
           min-idle: 5 # 커넥션 풀 최소 유휴 연결 수
           max-wait: -1ms # 커넥션 풀에서 커넥션을 얻기 위해 대기하는 최대 시간 (-1ms: 무한대기임)
+  
+  # RabbitMQ 설정 (Step4-1)
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin123
+    listener:
+      simple:
+        acknowledge-mode: auto # 자동 확인 모드
+        prefetch: 100 # 한 번에 가져올 메시지 수
+        concurrency: 8 # 동시 Consumer 수
+        max-concurrency: 16 # 최대 Consumer 수
+    template:
+      mandatory: true # 메시지가 라우팅되지 않으면 예외 발생
+      receive-timeout: 1000 # 메시지 수신 타임아웃 (ms)
+  
+  # Kafka 설정 (Step4-2)
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all # 모든 replica 확인
+    consumer:
+      group-id: reservation-consumer-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest # 가장 오래된 메시지부터 읽기

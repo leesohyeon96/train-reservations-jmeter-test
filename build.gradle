@@ -36,6 +36,12 @@ dependencies {
     
     // for step3: Redis Connection Pool ex) spring data redis에서 lettuce or jedis 커넥션 풀 관리시 사용!
     implementation 'org.apache.commons:commons-pool2:2.12.0'
+    
+    // for step4-1: RabbitMQ
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    
+    // for step4-2: Kafka
+    implementation 'org.springframework.kafka:spring-kafka'
 }
 
 tasks.named('test') {
