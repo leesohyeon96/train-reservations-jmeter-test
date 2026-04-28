@@ -1,68 +1,142 @@
+# ============================================
+# 기존 Step1~4 설정 (주석 처리)
+# ============================================
+#spring:
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/train_reservations_jmeter_test_db
+#    username: postgres
+#    password: trainreservationsjemetertest
+#    driver-class-name: org.postgresql.Driver
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
+#  sql:
+#    init:
+#      mode: always
+#      platform: postgresql
+#      data-locations: classpath:init-data.sql
+#
+#  # Redis 설정 (Step3: Cluster 지원)
+#  data:
+#    redis:
+#      host: localhost
+#      port: 6379
+#      timeout: 2000ms
+#      lettuce:
+#        pool:
+#          max-active: 20
+#          max-idle: 10
+#          min-idle: 5
+#          max-wait: -1ms
+#
+#  # RabbitMQ 설정 (Step4-1)
+#  rabbitmq:
+#    host: localhost
+#    port: 5672
+#    username: admin
+#    password: admin123
+#
+#  # Kafka 설정 (Step4-2)
+#  kafka:
+#    bootstrap-servers: localhost:9092
+
+
+
+
+
+
+
+
+
+
+
+
+# ============================================
+# 공통 설정 (application.yaml)
+# 개발/운영 환경별 설정은 application-dev.yaml, application-prod.yaml 참고
+# *그 명절 예매용 임시 서버라고 생각하고 짜는중!!
+# ============================================
 spring:
+  application:
+    name: train-reservation-service
+  profiles:
+    default: dev
+  
+  # 데이터소스 공통 설정
   datasource:
-    url: jdbc:postgresql://localhost:5432/train_reservations_jmeter_test_db
-    username: postgres
-    password: trainreservationsjemetertest
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+  
+  # JPA 공통 설정
   jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
     properties:
       hibernate:
         format_sql: true
-  sql:
-    init:
-      mode: always
-      platform: postgresql
-      # data.sql ? springboot? ?? ??? > ?? ???? ???? ??????
-      data-locations: classpath:init-data.sql
+        jdbc:
+          batch_size: 500
+        order_inserts: true
+        order_updates: true
+    open-in-view: false
   
-  # Redis 설정 (Step3: Cluster 지원)
+  # Flyway 설정 (step_final 구현 시 활성화 예정, 현재는 init-data.sql 사용)
+  flyway:
+    enabled: false
+  
+  # Redis 공통 설정
   data:
     redis:
-      host: localhost # 단일 노드 모드일 때
-      port: 6379 # 단일 노드 모드일 때
-      # Cluster 모드 사용 시 아래 주석 해제
-      # cluster:
-      #   nodes:
-      #     - localhost:7000 # 클러스터 노드1
-      #     - localhost:7001 # 클러스터 노드2
-      #     - localhost:7002 # 클러스터 노드3
-      #   max-redirects: 3 # 클러스터 모드에서 요청 실패 시 최대 재시도 횟수
-      timeout: 2000ms # redis 서버와 통신 시 타임아웃 (2초)
+      timeout: 2000ms
       lettuce:
         pool:
-          max-active: 20 # 커넥션 풀 최대 활성 연결 수
-          max-idle: 10 # 커넥션 풀 최대 유휴(대기인듯) 연결 수
-          min-idle: 5 # 커넥션 풀 최소 유휴 연결 수
-          max-wait: -1ms # 커넥션 풀에서 커넥션을 얻기 위해 대기하는 최대 시간 (-1ms: 무한대기임)
+          max-wait: -1ms
   
-  # RabbitMQ 설정 (Step4-1)
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: admin
-    password: admin123
-    listener:
-      simple:
-        acknowledge-mode: auto # 자동 확인 모드
-        prefetch: 100 # 한 번에 가져올 메시지 수
-        concurrency: 8 # 동시 Consumer 수
-        max-concurrency: 16 # 최대 Consumer 수
-    template:
-      mandatory: true # 메시지가 라우팅되지 않으면 예외 발생
-      receive-timeout: 1000 # 메시지 수신 타임아웃 (ms)
-  
-  # Kafka 설정 (Step4-2)
+  # Kafka 공통 설정
   kafka:
-    bootstrap-servers: localhost:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
-      acks: all # 모든 replica 확인
+      compression-type: snappy
     consumer:
-      group-id: reservation-consumer-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      auto-offset-reset: earliest # 가장 오래된 메시지부터 읽기
+      enable-auto-commit: false
+
+# 커스텀 설정 (공통)
+queue:
+  waiting:
+    max-admitted: 100
+    check-interval-ms: 1000
+  
+  token:
+    ttl-seconds: 300
+    prefix: "token:queue:"
+  
+  seat:
+    hold-ttl-seconds: 180
+    lock-prefix: "lock:seat:"
+  
+  cache:
+    seat-availability-ttl-seconds: 10
+    train-search-ttl-seconds: 60
+
+# 로깅 공통 설정
+logging:
+  level:
+    root: INFO
+    com.shl.trainreservationsjmetertest: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# 서버 공통 설정
+server:
+  port: 8080
+  compression:
+    enabled: true

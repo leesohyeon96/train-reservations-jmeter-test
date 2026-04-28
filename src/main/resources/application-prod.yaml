@@ -1,0 +1,104 @@
+spring:
+  # 운영 환경 데이터소스 (환경 변수 사용)
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://postgres-service:5432/reservation_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD}  # Secret에서 주입 (필수)
+    hikari:
+      maximum-pool-size: 20  # 운영 환경은 충분히
+      minimum-idle: 5
+      connection-timeout: 30000
+      leak-detection-threshold: 60000
+  
+  # 운영 환경 JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: validate  # 운영에서는 스키마 변경 금지
+    show-sql: false       # 운영에서는 SQL 로그 비활성화
+    properties:
+      hibernate:
+        format_sql: false  # show-sql: false이므로 의미 없지만 명시
+        jdbc:
+          batch_size: 500
+        order_inserts: true
+        order_updates: true
+  
+  # 운영 환경에서는 SQL 스크립트 절대 실행 안 함
+  sql:
+    init:
+      mode: never  # 절대 실행 안 함 (Flyway만 사용)
+  
+  # 운영 환경 Redis 설정 (Cluster)
+  data:
+    redis:
+      # 단일 Redis 또는 Cluster 선택
+      # 단일 Redis
+      host: ${REDIS_HOST:redis-service}
+      port: ${REDIS_PORT:6379}
+      
+      # 또는 Cluster (주석 해제하여 사용)
+      # cluster:
+      #   nodes:
+      #     - ${REDIS_CLUSTER_NODE_1:redis-cluster-1:6379}
+      #     - ${REDIS_CLUSTER_NODE_2:redis-cluster-2:6379}
+      #     - ${REDIS_CLUSTER_NODE_3:redis-cluster-3:6379}
+      #   max-redirects: 3
+      
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+  
+  # 운영 환경 Kafka 설정
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka-service:9092}
+    producer:
+      acks: all  # 운영 환경은 안정성 우선
+      retries: 3
+      max-in-flight-requests-per-connection: 1  # 순서 보장
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP:reservation-consumer-group-prod}
+      auto-offset-reset: earliest
+      max-poll-records: 100
+
+# 운영 환경 로깅
+logging:
+  level:
+    root: WARN
+    com.shl.trainreservationsjmetertest: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+  file:
+    name: ${LOG_FILE_PATH:/var/log/app/application.log}
+    max-size: 100MB
+    max-history: 30
+    total-size-cap: 3GB
+
+# 운영 환경 커스텀 설정 (환경 변수로 오버라이드 가능)
+queue:
+  waiting:
+    max-admitted: ${QUEUE_MAX_ADMITTED:100}
+    check-interval-ms: ${QUEUE_CHECK_INTERVAL:1000}
+  
+  token:
+    ttl-seconds: ${TOKEN_TTL:300}
+  
+  seat:
+    hold-ttl-seconds: ${SEAT_HOLD_TTL:180}
+  
+  cache:
+    seat-availability-ttl-seconds: ${CACHE_SEAT_TTL:10}
+    train-search-ttl-seconds: ${CACHE_TRAIN_TTL:60}
+
+# 운영 환경 모니터링
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true

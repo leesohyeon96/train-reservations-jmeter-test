@@ -1,0 +1,77 @@
+spring:
+  # 개발 환경 데이터소스
+  datasource:
+    url: jdbc:postgresql://localhost:5432/train_reservations_jmeter_test_db
+    username: postgres
+    password: trainreservationsjemetertest
+    hikari:
+      maximum-pool-size: 10  # 개발 환경은 작게
+      minimum-idle: 2
+  
+  # 개발 환경 JPA 설정
+  jpa:
+    hibernate:
+      ddl-auto: update  # 개발에서는 update 허용
+    show-sql: true      # 개발에서는 SQL 보기
+    properties:
+      hibernate:
+        format_sql: true  # show-sql: true일 때 포맷팅
+  
+  # 개발 환경에서는 SQL 스크립트도 허용 (로컬 개발 편의성)
+  sql:
+    init:
+      mode: always  # 개발 환경에서만 허용
+      platform: postgresql
+      data-locations: classpath:init-data.sql
+  
+  # 개발 환경 Redis 설정
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 2
+  
+  # 개발 환경 RabbitMQ 설정 (Step4-1)
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin123
+    listener:
+      simple:
+        acknowledge-mode: auto
+        prefetch: 100
+        concurrency: 8
+        max-concurrency: 16
+    template:
+      mandatory: true
+      receive-timeout: 1000
+
+  # 개발 환경 Kafka 설정 (Step4-2)
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      acks: 1  # 개발 환경은 빠른 응답 우선
+      retries: 1
+    consumer:
+      group-id: reservation-consumer-group-dev
+      auto-offset-reset: earliest
+
+# 개발 환경 로깅
+logging:
+  level:
+    com.shl.trainreservationsjmetertest: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.data.redis: DEBUG
+    org.springframework.kafka: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE  # 파라미터 바인딩 로그
+
+# 개발 환경 커스텀 설정 (오버라이드)
+queue:
+  waiting:
+    max-admitted: 50  # 개발 환경은 작게 테스트
