@@ -35,3 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### JMeter ###
+*.jtl
+jmeter.log
+report/
